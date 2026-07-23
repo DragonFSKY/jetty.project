@@ -200,7 +200,7 @@ public class ResponseTest
         request.setHeader("Host", "test");
 
         ByteBuffer responseBuffer = _connector.getResponse(request.generate());
-        HttpTester.Response response = HttpTester.parseResponse(responseBuffer);
+        HttpTester.Response response = HttpTester.parseResponse(ReadableBuffer.wrap(responseBuffer));
 
         assertThat(response.getStatus(), is(HttpStatus.FOUND_302));
 
