@@ -19,6 +19,7 @@ import java.nio.ByteBuffer;
 import java.util.ArrayList;
 import java.util.List;
 
+import org.eclipse.jetty.util.BufferUtil;
 import org.eclipse.jetty.util.Retainable;
 import org.eclipse.jetty.util.TypeUtil;
 import org.eclipse.jetty.util.buffer.ReadableBuffer;
@@ -406,6 +407,7 @@ public class AccumulatingReadBuffer implements ReadableBuffer
     @Override
     public long writeTo(Target target) throws IOException
     {
+        boolean writeCalled = false;
         long totalWritten = 0L;
         for (int i = 0; i < readableBuffers.size(); i++)
         {
@@ -417,6 +419,7 @@ public class AccumulatingReadBuffer implements ReadableBuffer
                 if (gathered > 1)
                 {
                     i += gathered - 1;
+                    writeCalled = true;
                     gatheringTarget.write(buffers.toArray(new ByteBuffer[0]));
                     long written = totalRemainingBefore - remaining();
                     position += written;
@@ -430,6 +433,7 @@ public class AccumulatingReadBuffer implements ReadableBuffer
             if (remainingBefore == 0L)
                 continue;
             long positionBefore = readableBuffer.position();
+            writeCalled = true;
             readableBuffer.writeTo(target);
             long remainingAfter = readableBuffer.remaining();
             long written = remainingBefore - remainingAfter;
@@ -440,7 +444,11 @@ public class AccumulatingReadBuffer implements ReadableBuffer
             if (remainingAfter > 0L)
                 break;
         }
-        consumeOriginalBuffers(totalWritten);
+        // Call Target.write() with an empty NIO buffer when this buffer is empty.
+        if (!writeCalled)
+            target.write(BufferUtil.EMPTY_BUFFER);
+        else
+            consumeOriginalBuffers(totalWritten);
         return totalWritten;
     }
 

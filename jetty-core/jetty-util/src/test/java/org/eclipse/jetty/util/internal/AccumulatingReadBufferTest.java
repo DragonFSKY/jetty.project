@@ -692,6 +692,41 @@ public class AccumulatingReadBufferTest
     }
 
     @Test
+    public void testEmptyBufferWriteToCallsTarget() throws Exception
+    {
+        ReadableBuffer acc = ReadableBuffer.accumulate(List.of());
+
+        AtomicInteger writeCount = new AtomicInteger();
+        long written = acc.writeTo(new TestGatheringTarget()
+        {
+            @Override
+            public long write(FileChannel input, long position, long count)
+            {
+                assertEquals(0L, count);
+                writeCount.incrementAndGet();
+                return 0;
+            }
+
+            @Override
+            public void write(ByteBuffer[] inputs)
+            {
+                long totalRemaining = Arrays.stream(inputs).mapToLong(ByteBuffer::remaining).sum();
+                assertEquals(0L, totalRemaining);
+                writeCount.incrementAndGet();
+            }
+
+            @Override
+            public void write(ByteBuffer input)
+            {
+                assertEquals(0L, input.remaining());
+                writeCount.incrementAndGet();
+            }
+        });
+        assertEquals(0L, written);
+        assertEquals(1, writeCount.get());
+    }
+
+    @Test
     public void testWriteToGatheringOnly() throws IOException
     {
         ReadableBuffer rb1 = ReadableBuffer.wrap(ByteBuffer.allocate(10)
