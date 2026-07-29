@@ -877,7 +877,7 @@ public class SslConnection extends AbstractConnection implements Connection.Upgr
                                 if (decryptedInputIsUserProvidedBuffer)
                                 {
                                     ReadableBuffer rb = writableAppIn.toReadable();
-                                    decryptedInput = rb.slice();
+                                    decryptedInput = rb.remaining() > 0L ? rb.slice() : ReadableBuffer.EMPTY;
                                     rb.toWritable();
                                 }
                                 else
