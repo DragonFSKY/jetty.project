@@ -36,7 +36,7 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 
 @ExtendWith(WorkDirExtension.class)
-public class PathReadBufferTest
+public class PathReadableBufferTest
 {
     public WorkDir workDir;
 
@@ -151,7 +151,7 @@ public class PathReadBufferTest
 
         assertEquals(20L, rb.remaining());
 
-        ReadableBuffer slice = rb.slice(5L, 15L);
+        ReadableBuffer slice = rb.slice(5L, 10L);
         assertEquals(0L, slice.position());
         assertEquals(10L, slice.remaining());
         byte[] bytes = new byte[10];

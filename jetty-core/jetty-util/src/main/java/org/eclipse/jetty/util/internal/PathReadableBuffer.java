@@ -28,37 +28,38 @@ import org.eclipse.jetty.util.buffer.ReadableBuffer;
 import org.eclipse.jetty.util.buffer.WritableBuffer;
 import org.eclipse.jetty.util.buffer.WritableBufferPool;
 
-public class PathReadBuffer implements ReadableBuffer
+public class PathReadableBuffer implements ReadableBuffer
 {
     private final Retainable retainable;
     private final Path path;
     private final WritableBufferPool.Sized pool;
     private final long offset;
-    private final long limit;
+    private final long length;
     private long position;
     private ReadableBuffer writeToBuffer;
 
-    public PathReadBuffer(Path path, long offset, long limit, WritableBufferPool.Sized pool) throws IOException
+    public PathReadableBuffer(Path path, long offset, long length, WritableBufferPool.Sized pool) throws IOException
     {
-        this(path, offset, limit, pool, new ReferenceCounter());
+        this(path, offset, length, pool, new ReferenceCounter());
     }
 
-    private PathReadBuffer(Path path, long offset, long limit, WritableBufferPool.Sized pool, Retainable retainable) throws IOException
+    private PathReadableBuffer(Path path, long offset, long length, WritableBufferPool.Sized pool, Retainable retainable) throws IOException
     {
         this.path = Objects.requireNonNull(path);
         this.retainable = retainable;
         this.pool = pool;
-        this.limit = limit < 0L ? Files.size(path) : limit;
+        long fileSize = Files.size(path);
+        this.length = length < 0L ? fileSize : length;
         if (offset < 0L)
             throw new IllegalArgumentException("Offset " + offset + " < 0 for file " + path);
-        if (offset > this.limit)
-            throw new IllegalArgumentException("Offset " + offset + " > limit " + this.limit + " for file " + path);
+        if (offset > fileSize)
+            throw new IllegalArgumentException("Offset " + offset + " > file size " + fileSize + " for file " + path);
         this.offset = offset;
     }
 
     private ReadableBuffer getLenAt(int len, long position, boolean absolute)
     {
-        if (offset + position + len > limit)
+        if (position + len > length)
             throw new BufferUnderflowException();
 
         WritableBuffer wb = pool.acquire(len);
@@ -96,7 +97,9 @@ public class PathReadBuffer implements ReadableBuffer
     @Override
     public void position(long newPosition)
     {
-        if (newPosition > limit)
+        if (newPosition < 0L)
+            throw new IllegalArgumentException("newPosition < 0");
+        if (newPosition > length)
             throw new BufferUnderflowException();
         this.position = newPosition;
     }
@@ -104,7 +107,7 @@ public class PathReadBuffer implements ReadableBuffer
     @Override
     public long capacity()
     {
-        return limit - offset;
+        return length;
     }
 
     @Override
@@ -206,7 +209,7 @@ public class PathReadBuffer implements ReadableBuffer
     {
         try
         {
-            return new PathReadBuffer(path, offset + position, limit, pool, new ReferenceCounter());
+            return new PathReadableBuffer(path, offset + position, length - position, pool, new ReferenceCounter());
         }
         catch (IOException e)
         {
@@ -217,9 +220,11 @@ public class PathReadBuffer implements ReadableBuffer
     @Override
     public ReadableBuffer slice(long position, long length)
     {
+        if (length > capacity())
+            throw new IllegalArgumentException("length(" + length + ") > capacity(" + capacity() + ")");
         try
         {
-            return new PathReadBuffer(path, offset + this.position + position, Math.min(limit, length), pool, new ReferenceCounter());
+            return new PathReadableBuffer(path, offset + position, length, pool, new ReferenceCounter());
         }
         catch (IOException e)
         {
@@ -265,6 +270,7 @@ public class PathReadBuffer implements ReadableBuffer
 
         try (FileChannel fileChannel = FileChannel.open(path, StandardOpenOption.READ))
         {
+            fileChannel.position(offset);
             long totalWritten = 0L;
             while (true)
             {
@@ -273,8 +279,8 @@ public class PathReadBuffer implements ReadableBuffer
                 {
                     read = wb.readFrom(output ->
                     {
-                        if (offset + position + output.remaining() > limit)
-                            output.limit((int)(limit - (offset + position)));
+                        if (output.remaining() > length - position)
+                            output.limit((int)length);
                         return fileChannel.read(output) == -1;
                     });
                     if (read < 1L)
@@ -304,10 +310,13 @@ public class PathReadBuffer implements ReadableBuffer
     @Override
     public String toString()
     {
-        return String.format("%s@%x{p=%s,r=%s}",
+        return String.format("%s@%x{path=%s,p=%d,l=%d,o=%d,r=%s}",
             TypeUtil.toShortName(getClass()),
             hashCode(),
             path,
+            position,
+            length,
+            offset,
             retainable);
     }
 

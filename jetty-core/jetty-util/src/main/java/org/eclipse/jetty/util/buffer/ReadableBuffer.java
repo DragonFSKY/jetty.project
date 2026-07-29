@@ -26,7 +26,7 @@ import org.eclipse.jetty.util.BufferUtil;
 import org.eclipse.jetty.util.Retainable;
 import org.eclipse.jetty.util.internal.AccumulatingReadBuffer;
 import org.eclipse.jetty.util.internal.FixedSizeBuffer;
-import org.eclipse.jetty.util.internal.PathReadBuffer;
+import org.eclipse.jetty.util.internal.PathReadableBuffer;
 
 /**
  * Wraps a byte container, exposing a read-only API. The byte container could be for instance:
@@ -118,12 +118,14 @@ public interface ReadableBuffer extends Retainable
 
     static ReadableBuffer wrap(Path path, WritableBufferPool.Sized pool) throws IOException
     {
-        return new PathReadBuffer(path, 0L, -1L, pool);
+        return new PathReadableBuffer(path, 0L, -1L, pool);
     }
 
-    static ReadableBuffer wrap(Path path, long offset, long limit, WritableBufferPool.Sized pool) throws IOException
+    static ReadableBuffer wrap(Path path, long offset, long length, WritableBufferPool.Sized pool) throws IOException
     {
-        return new PathReadBuffer(path, offset, limit, pool);
+        if (length == 0L)
+            return EMPTY;
+        return new PathReadableBuffer(path, offset, length, pool);
     }
 
     /**
