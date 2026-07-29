@@ -190,10 +190,14 @@ public class BufferedContentSink implements Content.Sink
             totalRemaining += readableBuffer.remaining();
         }
 
+        if (totalRemaining == _maxSize)
+            return false;
+
         if (totalRemaining + buffer.remaining() > _maxSize)
         {
-            long sliceLength = totalRemaining + buffer.remaining() - _maxSize;
+            long sliceLength = _maxSize - totalRemaining;
             ReadableBuffer slice = buffer.slice(buffer.position(), sliceLength);
+            buffer.position(buffer.position() + sliceLength);
             _aggregator.add(slice);
             return false;
         }

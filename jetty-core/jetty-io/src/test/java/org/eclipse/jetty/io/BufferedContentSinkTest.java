@@ -442,7 +442,7 @@ public class BufferedContentSinkTest
                 buffered.write(false, ReadableBuffer.wrap(input2), Callback.from(() ->
                     buffered.write(true, ReadableBuffer.wrap(input3), Callback.NOOP)))));
 
-            // We expect 3 buffer flushes: 4096b + 3004b + 2000 == 10_000b.
+            // We expect 3 buffer flushes: 4096 + 3904 + 2000 == 10_000.
             Content.Chunk chunk = async.read();
             assertThat(chunk, notNullValue());
             assertThat(chunk.remaining(), is(4096));
@@ -537,11 +537,7 @@ public class BufferedContentSinkTest
                     if (c >= 0)
                     {
                         Callback cb = this;
-                        new Thread(() ->
-                        {
-                            ByteBuffer byteBuffer = ByteBuffer.wrap(new byte[]{(byte)c});
-                            buffered.write(c == 0, ReadableBuffer.wrap(byteBuffer), cb);
-                        }).start();
+                        new Thread(() -> buffered.write(c == 0, ReadableBuffer.wrap(new byte[]{(byte)c}), cb)).start();
                     }
                     else
                     {
