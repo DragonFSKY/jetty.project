@@ -261,6 +261,7 @@ public class BufferUtilTest
         ByteBuffer to = ByteBuffer.allocate(10);
 
         BufferUtil.put(from, to);
+        BufferUtil.flipToFlush(to, 0);
         assertEquals(0, from.remaining());
         assertEquals(6, to.remaining());
         assertEquals("012345", BufferUtil.toString(to));
@@ -273,6 +274,7 @@ public class BufferUtilTest
         ByteBuffer to = ByteBuffer.allocate(10);
 
         BufferUtil.put(from, to);
+        BufferUtil.flipToFlush(to, 0);
         assertEquals(1, from.remaining());
         assertEquals(10, to.remaining());
         assertEquals("1234567890", BufferUtil.toString(to));
