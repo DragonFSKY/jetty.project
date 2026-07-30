@@ -372,13 +372,18 @@ public abstract class EventsHandler extends Handler.Wrapper
         {
             notifyOnResponseBegin(getRequest(), this);
             notifyOnResponseWrite(getRequest(), last, buffer);
+            ReadableBuffer copy = buffer == null ? null : buffer.slice();
             super.write(last, buffer, Callback.from(callback.getInvocationType(), () ->
             {
-                notifyOnResponseWriteComplete(getRequest(), last, buffer, null);
+                notifyOnResponseWriteComplete(getRequest(), last, copy, null);
+                if (copy != null)
+                    copy.release();
                 callback.succeeded();
             }, x ->
             {
-                notifyOnResponseWriteComplete(getRequest(), last, buffer, x);
+                notifyOnResponseWriteComplete(getRequest(), last, copy, x);
+                if (copy != null)
+                    copy.release();
                 callback.failed(x);
             }));
         }
