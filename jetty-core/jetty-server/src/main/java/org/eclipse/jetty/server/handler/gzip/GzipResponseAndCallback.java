@@ -447,7 +447,7 @@ public class GzipResponseAndCallback extends Response.Wrapper implements Callbac
                 return finishing(deflater, outputBuffer);
             }
 
-            if (outputBuffer.remaining() > 0L)
+            if (outputBuffer.position() > 0L)
             {
                 write(false, outputBuffer);
                 return Action.SCHEDULED;
