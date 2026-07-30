@@ -14,7 +14,6 @@
 package org.eclipse.jetty.server.internal;
 
 import java.io.IOException;
-import java.nio.ByteBuffer;
 import java.nio.channels.WritePendingException;
 import java.util.ArrayList;
 import java.util.List;
@@ -1248,7 +1247,7 @@ public class HttpChannelState implements HttpChannel, Components
      * The Channel's implementation of the {@link Response} API.
      * Also is a {@link Callback} used by the {@link #write(boolean, ReadableBuffer, Callback)}
      * method when calling
-     * {@link HttpStream#send(MetaData.Request, MetaData.Response, boolean, ByteBuffer, Callback)}
+     * {@link HttpStream#send(MetaData.Request, MetaData.Response, boolean, ReadableBuffer, Callback)}
      */
     public static class ChannelResponse implements Response, Callback
     {
@@ -1432,7 +1431,7 @@ public class HttpChannelState implements HttpChannel, Components
 
         /**
          * Called when the call to
-         * {@link HttpStream#send(MetaData.Request, MetaData.Response, boolean, ByteBuffer, Callback)}
+         * {@link HttpStream#send(MetaData.Request, MetaData.Response, boolean, ReadableBuffer, Callback)}
          * made by {@link ChannelResponse#write(boolean, ReadableBuffer, Callback)} succeeds.
          * The implementation maintains the {@link #_streamSendState} before taking
          * and serializing the call to the {@link #_writeCallback}, which was set by the call to {@code write}.
@@ -1458,7 +1457,7 @@ public class HttpChannelState implements HttpChannel, Components
 
         /**
          * Called when the call to
-         * {@link HttpStream#send(MetaData.Request, MetaData.Response, boolean, ByteBuffer, Callback)}
+         * {@link HttpStream#send(MetaData.Request, MetaData.Response, boolean, ReadableBuffer, Callback)}
          * made by {@link ChannelResponse#write(boolean, ReadableBuffer, Callback)} fails.
          * <p>
          * The implementation maintains the {@link #_streamSendState} before taking

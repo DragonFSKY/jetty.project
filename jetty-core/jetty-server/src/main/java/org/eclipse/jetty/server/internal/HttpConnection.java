@@ -935,16 +935,16 @@ public class HttpConnection extends AbstractMetaDataConnection implements Runnab
                         if (_chunk != null)
                             bytes += _chunk.remaining();
                         ReadableBuffer contentByteBuffer = _content;
-                        if (_content != null && _content.remaining() > 0L)
+                        if (contentByteBuffer != null && contentByteBuffer.remaining() > 0L)
                         {
-                            if (_generator.isChunking() && _content.remaining() > chunkMaxLength)
+                            if (_generator.isChunking() && contentByteBuffer.remaining() > chunkMaxLength)
                             {
-                                ReadableBuffer slice = _content.slice(_content.position(), chunkMaxLength);
-                                _content.position(_content.position() + chunkMaxLength);
-                                _content.release();
-                                _content = slice;
+                                ReadableBuffer slice = contentByteBuffer.slice(contentByteBuffer.position(), chunkMaxLength);
+                                contentByteBuffer.position(contentByteBuffer.position() + chunkMaxLength);
+                                contentByteBuffer.release();
+                                contentByteBuffer = slice;
                             }
-                            bytes += _content.remaining();
+                            bytes += contentByteBuffer.remaining();
                         }
                         _bytesOut.addAndGet(bytes);
                         ReadableBuffer accumulated = ReadableBuffer.accumulate(_header, _chunk, contentByteBuffer);
