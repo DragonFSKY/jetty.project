@@ -258,7 +258,7 @@ public class BufferUtilTest
     public void testPutFromReadableBufferIntoLargeEnoughBuffer()
     {
         ReadableBuffer from = ReadableBuffer.wrap(BufferUtil.toBuffer("012345"));
-        ByteBuffer to = BufferUtil.allocate(10);
+        ByteBuffer to = ByteBuffer.allocate(10);
 
         BufferUtil.put(from, to);
         assertEquals(0, from.remaining());
@@ -270,13 +270,24 @@ public class BufferUtilTest
     public void testPutFromReadableBufferIntoTooSmallBuffer()
     {
         ReadableBuffer from = ReadableBuffer.wrap(BufferUtil.toBuffer("1234567890A"));
-        ByteBuffer to = BufferUtil.allocate(10);
+        ByteBuffer to = ByteBuffer.allocate(10);
 
         BufferUtil.put(from, to);
         assertEquals(1, from.remaining());
         assertEquals(10, to.remaining());
         assertEquals("1234567890", BufferUtil.toString(to));
         assertEquals('A', from.get());
+    }
+
+    @Test
+    public void testToBuffer()
+    {
+        ReadableBuffer from = ReadableBuffer.wrap(BufferUtil.toBuffer("1234567890A"));
+        ByteBuffer buffer = BufferUtil.toBuffer(from, false);
+
+        assertEquals(0, from.remaining());
+        assertEquals(11, buffer.remaining());
+        assertEquals("1234567890A", BufferUtil.toString(buffer));
     }
 
     @Test

@@ -579,21 +579,14 @@ public class BufferUtil
      * Put data from a {@link ReadableBuffer} into a NIO buffer, avoiding over/under flows
      *
      * @param from ReadableBuffer to take bytes from, whose position is modified with the bytes taken.
-     * @param to Buffer to put bytes to in flush mode.
+     * @param to Buffer to put bytes to in fill mode.
      * @return number of bytes moved
      * @throws ReadOnlyBufferException if the to buffer is read only
      */
     public static int put(ReadableBuffer from, ByteBuffer to)
     {
-        WritableBuffer wb = ReadableBuffer.wrap(to).toWritable();
-        try
-        {
-            return (int)put(from, wb);
-        }
-        finally
-        {
-            wb.toReadable();
-        }
+        WritableBuffer wb = WritableBuffer.wrap(to);
+        return (int)put(from, wb);
     }
 
     public static int put(ByteBuffer from, WritableBuffer to)
@@ -1344,8 +1337,10 @@ public class BufferUtil
         long capacity = buffer.remaining();
         if (capacity > Integer.MAX_VALUE)
             throw new BufferOverflowException();
-        ByteBuffer result = BufferUtil.allocate((int)capacity, direct);
+        ByteBuffer result = allocate((int)capacity, direct);
+        flipToFill(result);
         put(buffer, result);
+        flipToFlush(result, 0);
         return result;
     }
 
